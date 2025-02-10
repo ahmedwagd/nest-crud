@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int           @id @default(autoincrement())
+  createdAt   DateTime      @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamp(3)
+  email       String        @unique @db.VarChar(30)
+  password    String        @db.VarChar(25)
+  name        String        @db.VarChar(50)
+  birthday    DateTime
+  age         Int?
+  country     String?
+  role        Role          @default(USER)
+  posts       Post[]
+  profile     Profile?
+  Schedule    Schedule[]
+  Appointment Appointment[]
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @updatedAt @db.Timestamp(3)
+  bio       String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int      @unique
+}
+
+model Post {
+  id         Int        @id @default(autoincrement())
+  createdAt  DateTime   @default(now()) @db.Timestamp(3)
+  updatedAt  DateTime   @updatedAt @db.Timestamp(3)
+  title      String
+  published  Boolean    @default(false)
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   Int
+  categories Category[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @updatedAt @db.Timestamp(3)
+  posts     Post[]
+}
+
+model Schedule {
+  id            Int        @id @default(autoincrement())
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int        @unique
+  dayOfWeek     DaysOfWeek
+  availableFrom DateTime
+  availableTo   DateTime
+  createdAt     DateTime   @default(now()) @db.Timestamp(3)
+  updatedAt     DateTime   @updatedAt @db.Timestamp(3)
+}
+
+model Appointment {
+  id              Int               @id @default(autoincrement())
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          Int               @unique
+  patient         Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId       Int               @unique
+  status          AppointmentStatus @default(PENDING)
+  appointmentDate DateTime
+  reason          String?
+  createdAt       DateTime          @default(now()) @db.Timestamp(3)
+  updatedAt       DateTime          @updatedAt @db.Timestamp(3)
+}
+
+model Patient {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(50)
+  birthday    DateTime
+  gender      Gender
+  createdAt   DateTime      @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamp(3)
+  Appointment Appointment[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum DaysOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+enum AppointmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
